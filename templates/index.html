@@ -1,35 +1,145 @@
-{% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+<!DOCTYPE html>
+<html>
 
-{% block title %}Flasky{% endblock %}
+<head>
+    <title>Flasky</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+</head>
 
-{% block page_content %}
-<div class="page-header">
-    <h1>Olá, {% if name %}{{ name }}{% else %}Stranger{% endif %}!</h1>
-    {% if not known %}
-    <p>Prazer em conhecê-lo!</p>
-    {% else %}
-    <p>Feliz em vê-lo novamente!</p>
-    {% endif %}
-</div>
-{{ wtf.quick_form(form) }}
+<body>
+    <div class="navbar navbar-inverse" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Avaliação contínua: <b>Aula 060.C</b></a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
-<h2>Relação de usuários cadastrados</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Nome do usuário</th>
-            <th>Função</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for key in user_all %}
-        <tr>
-            <td>{{ key.username }}</td>
-            <td>{{ key.role.name }}</td>            
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="container">
+        <div class="page-header">
+            <h1>Olá, {% if name %}{{ name }}{% else %}Stranger{% endif %}!</h1>
+            {% if not known %}
+            <p>Prazer em conhecê-lo!</p>
+            {% else %}
+            <p>Feliz em vê-lo novamente!</p>
+            {% endif %}
+        </div>
 
-{% endblock %}
+        <form action="" method="post" class="form" role="form">
+            {{ form.hidden_tag() }}
+            <div class="form-group required">
+                {{ form.name.label(class="control-label") }}
+                {{ form.name(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.role.label(class="control-label") }}
+                {{ form.role(class="form-control") }}
+            </div>
+            <input class="btn btn-default" id="submit" name="submit" type="submit" value="Submit">
+        </form>
+
+        <h2>Relação de usuários cadastrados</h2>
+        <h4>Quantidade: {{ user_all|length }}</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome do usuário</th>
+                    <th>Função</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in user_all %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.role.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Relação de funções cadastradas</h2>
+        <h4>Quantidade: {{ role_all|length }}</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Funções</th>
+                    <th>Usuários</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in role_all %}
+                <tr>
+                    <td>{{ role.name }}</td>
+                    <td>
+                        <ol>
+                            {% for user in role.users %}
+                            <li>{{ user.username }}</li>
+                            {% endfor %}
+                        </ol>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
+
+    <script>
+        moment.locale("en");
+        function flask_moment_render(elem) {
+            const timestamp = moment(elem.dataset.timestamp);
+            const func = elem.dataset.function;
+            const format = elem.dataset.format;
+            const timestamp2 = elem.dataset.timestamp2;
+            const no_suffix = elem.dataset.nosuffix;
+            const units = elem.dataset.units;
+            let args = [];
+            if (format)
+                args.push(format);
+            if (timestamp2)
+                args.push(moment(timestamp2));
+            if (no_suffix)
+                args.push(no_suffix);
+            if (units)
+                args.push(units);
+            elem.textContent = timestamp[func].apply(timestamp, args);
+            elem.classList.remove('flask-moment');
+            elem.style.display = "";
+        }
+        function flask_moment_render_all() {
+            const moments = document.querySelectorAll('.flask-moment');
+            moments.forEach(function (moment) {
+                flask_moment_render(moment);
+                const refresh = moment.dataset.refresh;
+                if (refresh && refresh > 0) {
+                    (function (elem, interval) {
+                        setInterval(function () {
+                            flask_moment_render(elem);
+                        }, interval);
+                    })(moment, refresh);
+                }
+            })
+        }
+        document.addEventListener("DOMContentLoaded", flask_moment_render_all);
+    </script>
+</body>
+
+</html>
